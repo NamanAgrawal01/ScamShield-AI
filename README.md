@@ -1,6 +1,10 @@
 # ScamShield AI 🛡️
 
-ScamShield AI is a premium, full-stack scam detection application built with Next.js 14. It leverages the power of Groq (LLAMA-3.3-70B) for text analysis and Google Safe Browsing API for URL threat detection.
+ScamShield AI is a premium, full-stack scam detection application built with Next.js 14. 
+
+### 🚀 **[Live Demo: scam-shield1.web.app](https://scam-shield1.web.app)**
+
+It leverages the power of Groq (LLAMA-3.3-70B) for text analysis and Google Safe Browsing API for URL threat detection.
 
 ## Features
 - **AI Text Analysis**: Detects urgency, impersonation, and fraud patterns in messages.
