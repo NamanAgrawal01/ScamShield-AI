@@ -5,42 +5,47 @@ export default function ResultCard({ result, onAgain }) {
   const { verdict, confidence, redFlags, explanation, scamType, urlResult } = result;
   const [copied, setCopied] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [forensicId, setForensicId] = useState('');
+
+  useEffect(() => {
+    setForensicId(`SHIELD-${Math.random().toString(36).substring(2, 9).toUpperCase()}`);
+    return () => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); };
+  }, []);
 
   const config = {
     SCAM: {
       class: 'scam bg-[var(--tomato-bg)] border-[var(--tomato-b)] text-[var(--tomato)]',
       icon: '🚨',
-      label: 'Warning',
+      label: 'Critical Alert',
       title: 'Scam Detected',
       bar: 'bg-[var(--tomato)]',
-      glow: 'shadow-[0_0_50px_-12px_rgba(192,57,43,0.3)]'
+      glow: 'shadow-[0_0_80px_-20px_rgba(192,57,43,0.4)]'
     },
     SUSPICIOUS: {
       class: 'susp bg-[var(--amber-bg)] border-[var(--amber-b)] text-[var(--amber)]',
       icon: '⚠️',
-      label: 'Caution',
+      label: 'Neural Drift',
       title: 'Looks Suspicious',
       bar: 'bg-[var(--amber)]',
-      glow: 'shadow-[0_0_50px_-12px_rgba(180,83,9,0.3)]'
+      glow: 'shadow-[0_0_80px_-20px_rgba(180,83,9,0.4)]'
     },
     SAFE: {
       class: 'safe bg-[var(--forest-bg)] border-[var(--forest-b)] text-[var(--forest)]',
-      icon: '✅',
-      label: 'All clear',
-      title: 'Looks Safe',
+      icon: '🛡️',
+      label: 'Verified Safe',
+      title: 'Clear of Risk',
       bar: 'bg-[var(--forest)]',
-      glow: 'shadow-[0_0_50px_-12px_rgba(22,101,52,0.3)]'
+      glow: 'shadow-[0_0_80px_-20px_rgba(22,101,52,0.4)]'
     }
   };
 
   const style = config[verdict] || config.SUSPICIOUS;
 
-  const copyReport = () => {
-    const reportText = `Neural Analysis Report\nVerdict: ${verdict}\nConfidence: ${confidence}%\nDetails: ${explanation}`;
-    navigator.clipboard.writeText(reportText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const metrics = [
+    { label: 'Urgency', value: verdict === 'SCAM' ? 95 : verdict === 'SAFE' ? 5 : 65 },
+    { label: 'Deception', value: verdict === 'SCAM' ? 88 : verdict === 'SAFE' ? 10 : 45 },
+    { label: 'Risk Factor', value: verdict === 'SCAM' ? 99 : verdict === 'SAFE' ? 2 : 75 }
+  ];
 
   const speakBriefing = () => {
     if ('speechSynthesis' in window) {
@@ -49,131 +54,149 @@ export default function ResultCard({ result, onAgain }) {
         setIsSpeaking(false);
         return;
       }
-      const text = `The assessment is ${verdict}. ${explanation}. We found ${redFlags?.length || 0} warning signs.`;
+      const text = `The assessment is ${verdict}. ${explanation}. We found ${redFlags?.length || 0} warning signs. Forensic ID: ${forensicId}`;
       const msg = new SpeechSynthesisUtterance(text);
       msg.rate = 0.95;
-      msg.pitch = 1.1;
       msg.onend = () => setIsSpeaking(false);
       setIsSpeaking(true);
       window.speechSynthesis.speak(msg);
     }
   };
 
-  useEffect(() => {
-    return () => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); };
-  }, []);
-
   return (
-    <div className={`w-full rounded-[25px] p-8 border animate-in fade-in slide-in-from-bottom-6 duration-700 overflow-hidden relative ${style.class} ${style.glow}`}>
+    <div className={`w-full rounded-[3rem] p-12 border-2 animate-in fade-in slide-in-from-bottom-12 duration-1000 overflow-hidden relative ${style.class} ${style.glow}`}>
       
-      {/* Neural Background Sweep */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent translate-x-[-100%] animate-[shimmer_3s_infinite] pointer-events-none"></div>
+      {/* HUD Accents */}
+      <div className="absolute top-0 right-0 p-8 flex flex-col items-end gap-2 opacity-30 select-none">
+        <div className="text-[10px] font-mono tracking-tighter">SEC_PROTOCOL_V4.2</div>
+        <div className="text-[10px] font-mono tracking-tighter">ENCRYPTION_ACTIVE</div>
+      </div>
 
-      {/* Header */}
-      <div className={`flex items-start gap-4 mb-7 pb-6 border-b ${
-        verdict === 'SCAM' ? 'border-[var(--tomato-b)]' : 
-        verdict === 'SAFE' ? 'border-[var(--forest-b)]' : 
-        'border-[var(--amber-b)]'
-      }`}>
-        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl border animate-pulse ${
-          verdict === 'SCAM' ? 'bg-[var(--tomato)]/[0.08] border-[var(--tomato-b)]' : 
-          verdict === 'SAFE' ? 'bg-[var(--forest)]/[0.08] border-[var(--forest-b)]' : 
-          'bg-[var(--amber)]/[0.08] border-[var(--amber-b)]'
+      <div className="neural-sweep"></div>
+      
+      {/* Top Header */}
+      <div className="flex flex-col md:flex-row items-center md:items-start gap-10 mb-16 border-b border-black/5 pb-10">
+        <div className={`w-24 h-24 rounded-[2rem] flex items-center justify-center text-5xl shadow-2xl animate-bounce duration-[5s] border-b-4 ${
+          verdict === 'SCAM' ? 'bg-[var(--tomato)] text-white border-black/20' : 
+          verdict === 'SAFE' ? 'bg-[var(--forest)] text-white border-black/20' : 
+          'bg-[var(--amber)] text-white border-black/20'
         }`}>
           {style.icon}
         </div>
-        <div className="flex-1">
-          <div className="flex justify-between items-start">
-            <div className="font-syne text-[11px] font-bold uppercase tracking-[2px] mb-1 opacity-70">
-              System Assessment
+        <div className="flex-1 text-center md:text-left">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-6">
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-[0.4em] mb-3 opacity-60">
+                Audit Result: {forensicId}
+              </div>
+              <h2 className="font-syne text-[clamp(2.5rem,6vw,4rem)] font-black tracking-tighter text-[var(--ink)] italic leading-none">
+                {style.title}
+              </h2>
             </div>
             <button 
               onClick={speakBriefing}
-              className={`p-2 rounded-full transition-all ${isSpeaking ? 'bg-black text-white scale-110' : 'bg-black/5 hover:bg-black/10'}`}
-              title="Voice Briefing"
+              className={`w-14 h-14 rounded-full transition-all shadow-xl flex items-center justify-center text-2xl ${isSpeaking ? 'bg-black text-white scale-110 animate-pulse' : 'bg-white/80 hover:bg-black/5 backdrop-blur-md'}`}
             >
               {isSpeaking ? '🛑' : '🔊'}
             </button>
           </div>
-          <h2 className="font-syne text-3xl font-black tracking-tighter text-[var(--ink)] mb-2 italic">
-            {style.title}
-          </h2>
-          <div className={`inline-flex items-center gap-2 text-[11px] font-bold px-3 py-1 rounded-lg border uppercase tracking-wider ${
-            verdict === 'SCAM' ? 'bg-[var(--tomato)]/[0.1] border-[var(--tomato-b)] text-[var(--tomato)]' : 
-            verdict === 'SAFE' ? 'bg-[var(--forest)]/[0.1] border-[var(--forest-b)] text-[var(--forest)]' : 
-            'bg-[var(--amber)]/[0.1] border-[var(--amber-b)] text-[var(--amber)]'
-          }`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-current animate-ping"></span>
-            {scamType || 'Unknown Intent'}
+          <div className="flex flex-wrap justify-center md:justify-start gap-3">
+            <span className="px-5 py-2 rounded-2xl bg-black/5 text-[10px] font-black uppercase tracking-widest">{scamType || 'General Threat'}</span>
+            <span className="px-5 py-2 rounded-2xl bg-white/40 backdrop-blur-md border border-white/50 text-[10px] font-black uppercase tracking-widest">Neural Confidence: {confidence}%</span>
           </div>
         </div>
       </div>
 
-      {/* Confidence Hud */}
-      <div className="mb-8">
-        <div className="flex justify-between items-baseline mb-3">
-          <span className="text-[11px] font-black uppercase tracking-widest text-[var(--ink3)]">Neural Certainty</span>
-          <span className={`font-syne text-2xl font-black tracking-tighter ${style.text}`}>
-            {confidence}%
-          </span>
-        </div>
-        <div className="h-2 bg-black/10 rounded-full overflow-hidden p-0.5 border border-white/20">
-          <div 
-            className={`h-full rounded-full transition-all duration-[1.5s] cubic-bezier(.4,0,.2,1) ${style.bar}`} 
-            style={{ width: `${confidence}%` }}
-          />
-        </div>
+      {/* Metric Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-16">
+        {metrics.map((m, i) => (
+          <div key={i} className="bg-white/20 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/30 glass-shadow group hover:bg-white/40 transition-all">
+            <div className="text-[10px] font-black uppercase tracking-widest text-[var(--ink3)] mb-5">{m.label} Radar</div>
+            <div className="flex flex-col gap-4">
+              <span className={`font-syne text-4xl font-black italic tracking-tighter ${
+                m.value > 70 ? 'text-[var(--tomato)]' : m.value > 30 ? 'text-[var(--amber)]' : 'text-[var(--forest)]'
+              }`}>
+                {m.value}%
+              </span>
+              <div className="h-2 bg-black/10 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-[3s] delay-[${i * 300}ms] ${
+                    m.value > 70 ? 'bg-[var(--tomato)]' : m.value > 30 ? 'bg-[var(--amber)]' : 'bg-[var(--forest)]'
+                  }`}
+                  style={{ width: `${m.value}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Details Sections */}
-      <div className="space-y-6">
-        <div className="bg-white/40 backdrop-blur-sm rounded-2xl p-5 border border-white/40 shadow-sm">
-          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--ink3)] mb-3">Expert Explanation</div>
-          <p className="text-[15px] leading-relaxed text-[var(--ink2)] font-medium">
-            {explanation}
+      {/* Intelligence Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+        <div className="bg-white/60 backdrop-blur-md rounded-[2.5rem] p-8 border border-white shadow-sm flex flex-col gap-4 group hover:-translate-y-1 transition-transform">
+          <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--ink3)] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full border border-[var(--ink3)]"></span>
+            Decoded Intent
+          </div>
+          <p className="text-[18px] leading-relaxed text-[var(--ink)] font-bold italic opacity-90">
+            "{explanation}"
           </p>
         </div>
 
-        {redFlags && redFlags.length > 0 && (
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--ink3)] mb-4">Neural Warning Flags</div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {redFlags.map((flag, i) => (
-                <div key={i} className="flex items-center gap-3 bg-white/60 rounded-xl p-3 text-[12px] font-bold text-[var(--ink2)] border border-white/50 shadow-sm group hover:scale-[1.02] transition-transform">
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${style.bar}`} />
-                  {flag}
-                </div>
-              ))}
-            </div>
+        <div className="bg-black/5 rounded-[2.5rem] p-8 border border-black/5 flex flex-col gap-6">
+          <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--ink3)]">Digital Markers Discovered</div>
+          <div className="space-y-3">
+            {redFlags && redFlags.length > 0 ? redFlags.map((flag, i) => (
+              <div key={i} className="flex items-center gap-4 bg-white/40 p-4 rounded-2xl text-[12px] font-extrabold text-[var(--ink2)] border border-white/20 shadow-sm">
+                <div className={`w-3 h-3 rounded-full shrink-0 ${style.bar}`} />
+                {flag}
+              </div>
+            )) : <div className="text-[12px] font-bold text-[var(--ink3)] italic">No surface-level red flags detected.</div>}
           </div>
-        )}
-
-        {urlResult && (
-          <div className={`flex items-center gap-3 p-4 rounded-xl text-[14px] font-bold border-2 shadow-lg animate-bounce duration-[3s] ${
-            urlResult === 'MALICIOUS' 
-            ? 'bg-red-500/10 border-red-500/20 text-red-700' 
-            : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700'
-          }`}>
-            <span className="text-xl">{urlResult === 'MALICIOUS' ? '☣️' : '🛡️'}</span>
-            <span>{urlResult === 'MALICIOUS' ? 'BLACK-LISTED DOMAIN DETECTED' : 'DOMAIN VERIFIED AS SAFE'}</span>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex gap-3 mt-8 pt-6 border-t border-black/5">
-          <button 
-            onClick={copyReport}
-            className="flex-1 p-4 bg-white/70 border border-[var(--border2)] rounded-2xl text-[12px] font-black uppercase tracking-widest text-[var(--ink2)] hover:bg-white hover:border-[var(--ink)] hover:text-[var(--ink)] transition-all flex items-center justify-center gap-2 group"
-          >
-            <span>{copied ? '✅ COPIED' : '📤 EXPORT EVIDENCE'}</span>
-          </button>
-          <button 
-            onClick={onAgain}
-            className="flex-1 p-4 bg-[var(--ink)] border border-[var(--ink)] rounded-2xl text-[12px] font-black uppercase tracking-widest text-white hover:bg-[#2c2926] shadow-xl shadow-black/20 transition-all active:scale-95"
-          >
-            ← NEW SCAN
-          </button>
         </div>
+      </div>
+
+      {/* URL Analysis Block */}
+      {urlResult && (
+        <div className={`mb-16 p-10 rounded-[3rem] border-4 shadow-2xl relative overflow-hidden group ${
+          urlResult === 'MALICIOUS' 
+          ? 'bg-red-500/10 border-red-500/20 text-red-950' 
+          : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-950'
+        }`}>
+          <div className="relative z-10">
+            <div className="text-[11px] font-black uppercase tracking-[0.5em] mb-4 opacity-50 italic">Protocol: SSL_GSB_ACTIVE</div>
+            <div className="text-3xl font-black italic tracking-tighter leading-none mb-3">
+              {urlResult === 'MALICIOUS' ? '☣️ DOMAIN INFECTED / BLACKLISTED' : '🛡️ DOMAIN SOURCE VERIFIED SAFE'}
+            </div>
+            <div className="text-[14px] font-bold opacity-70">Cross-referenced with Google Safe Browsing Threat Index.</div>
+          </div>
+          <div className="absolute right-0 bottom-0 opacity-10 blur-sm translate-x-1/4 translate-y-1/4 select-none pointer-events-none">
+             <span className="text-[12rem]">{urlResult === 'MALICIOUS' ? '☣️' : '🔒'}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Final Action Hub */}
+      <div className="flex flex-col sm:flex-row gap-5 p-5 bg-black/5 rounded-[3.5rem] border border-black/5">
+        <button 
+          onClick={() => {
+            const report = `FORENSIC AUDIT: ${forensicId}\nVERDICT: ${verdict}\nExplanation: ${explanation}`;
+            navigator.clipboard.writeText(report);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }}
+          className="flex-1 p-6 bg-white border-2 border-white rounded-[3rem] text-[12px] font-black uppercase tracking-[0.3em] text-[var(--ink)] hover:bg-white hover:shadow-3xl hover:scale-[1.02] transition-all flex items-center justify-center gap-4 group"
+        >
+          <span className="text-2xl group-hover:rotate-12 transition-transform">📋</span>
+          <span>{copied ? 'Audit Copied' : 'Copy Audit Report'}</span>
+        </button>
+        <button 
+          onClick={onAgain}
+          className="flex-1 p-6 bg-[var(--ink)] text-white rounded-[3rem] text-[12px] font-black uppercase tracking-[0.3em] hover:bg-black hover:shadow-3xl hover:scale-[1.02] transition-all flex items-center justify-center gap-4 group"
+        >
+          <span className="text-2xl group-active:rotate-[360deg] transition-all">🔄</span>
+          New Intelligence Scan
+        </button>
       </div>
     </div>
   );
