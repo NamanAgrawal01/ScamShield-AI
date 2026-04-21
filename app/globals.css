@@ -68,6 +68,29 @@ h1, h2, h3, .font-syne {
   width: 8px;
 }
 
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  50% { transform: translateX(100%) skewX(-15deg); }
+  100% { transform: translateX(-100%) skewX(-15deg); }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s infinite;
+}
+
+.neural-sweep {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: sweep 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
 ::-webkit-scrollbar-track {
   background: var(--bg);
 }
